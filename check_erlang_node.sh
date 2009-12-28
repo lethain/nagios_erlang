@@ -103,7 +103,7 @@ while test -n "$1"; do
 	esac
     shift
 done
-
+CMD="$ERL -pa $BEAM -run nagios_erlang check_node $NODE -noshell"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "version: $VERSION"
@@ -113,7 +113,6 @@ if [ $VERBOSITY -ge 3 ]
     echo "erl: $ERL"
     echo "beam: $BEAM"
     echo "verbosity: $VERBOSITY"
+    echo "full command: $CMD"
 fi
-
-CMD="$ERL -pa $BEAM -exec \"nagios_erlang:check_node('$NODE')\" -noshell"
-echo $CMD
+$CMD

@@ -73,6 +73,10 @@ print_help() {
 
 while test -n "$1"; do
     case "$1" in
+	--application|-a)
+	    APPLICATION=$2
+	    shift
+	    ;;
 	--help|-h)
 	    print_help
 	    exit $ST_UK
@@ -105,7 +109,7 @@ while test -n "$1"; do
 	esac
     shift
 done
-
+CMD="$ERL -pa $BEAM -run nagios_erlang check_application $NODE $APPLICATION -noshell"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "version: $VERSION"
@@ -116,13 +120,7 @@ if [ $VERBOSITY -ge 3 ]
     echo "erl: $ERL"
     echo "beam: $BEAM"
     echo "verbosity: $VERBOSITY"
+    echo "full command: $CMD"
 fi
+$CMD
 
-echo "OK - $NODE pinged successfully."
-exit $ST_OK
-
-echo "WARNING - $NODE could not be pinged."
-exit $ST_WR
-
-echo "CRITICAL - Failed to ping $NODE."
-exit $ST_CR

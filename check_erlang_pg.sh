@@ -121,7 +121,7 @@ while test -n "$1"; do
 	esac
     shift
 done
-
+CMD="$ERL -pa $BEAM -run nagios_erlang check_process_group $NODE $PROCESS_GROUP $WARNING $CRITICAL -noshell"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "verbosity: $VERBOSITY"
@@ -133,14 +133,6 @@ if [ $VERBOSITY -ge 3 ]
     echo "node: $NODE"
     echo "tmp_node: $TMP_NODE"
     echo "beam: $BEAM"
+    echo "full command: $CMD"
 fi
-
-
-echo "OK - $NODE pinged successfully."
-exit $ST_OK
-
-echo "WARNING - $NODE could not be pinged."
-exit $ST_WR
-
-echo "CRITICAL - Failed to ping $NODE."
-exit $ST_CR
+$CMD
