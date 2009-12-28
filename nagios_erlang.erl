@@ -13,6 +13,7 @@
 -define(WARN_CODE, 1).
 -define(CRIT_CODE, 2).
 -define(UNKNOWN_CODE, 3).
+-define(RPC_TIMEOUT, 1000).
 
 %%%
 %%% External Interfaces
@@ -72,7 +73,16 @@ check_application_inner(Node, Application) when is_list(Node) ->
 check_application_inner(Node, Application) when is_list(Application) ->    
     check_application_inner(Node, list_to_atom(Application));
 check_application_inner(Node, Application) ->
-    {ok, "Application ~p running at ~p.~n", [Application, Node]}.
+    case rpc:call(Node, application, start, [Application], ?RPC_TIMEOUT) of
+	{badrpc,timeout} ->
+	    {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
+	{badrpc,nodedown} ->
+	    {critical, "Node ~p not running.~n", [Node]};
+	{error, {already_started, Application}} ->
+	    {ok, "Application ~p running on Node ~p.~n", [Application, Node]};
+	_Other ->
+	    {critical, "Application ~p not running on Node ~p.~n", [Application, Node]}
+    end.
 
 %% @doc Check status of a remote node's pg2 groups  and return Nagios friendly response.
 %%      If WarnLvl is 0, then no warning messages will be sent.

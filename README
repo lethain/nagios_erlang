@@ -57,9 +57,21 @@ Next, actually start the node:
     (my_node@will-larsons-macbook.local)1> node().
     'my_node@will-larsons-macbook.local'
 
-And finally we can verify the script works:
+And we can verify the node is accessible:
 
     bash-3.2$ ./check_erlang_node.sh -e erl -n my_node@`hostname` -c cookie
     OK - Node 'my_node@will-larsons-macbook.local' running.
+
+Next we can check for started applications (note that kernel2 is a made up
+application which doesn't exist, while kernel is a real application which
+is indeed running):
+
+    bash-3.2$ ./check_erlang_application.sh -e erl -c cookie -n my_node@`hostname` -a kernel2
+    CRITICAL - Application kernel2 not running on Node 'my_node@will-larsons-macbook.local'.
+    bash-3.2$ ./check_erlang_application.sh -e erl -c cookie -n my_node@`hostname` -a kernel
+    OK - Application kernel running on Node 'my_node@will-larsons-macbook.local'.
+
+Last, we can check on the process groups:
+
 
 And that is all there is to it.
