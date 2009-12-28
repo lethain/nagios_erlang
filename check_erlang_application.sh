@@ -2,8 +2,8 @@
 #
 # ## Overview
 #
-#   This script is used for checking that a specified node can be pinged
-#   using the net_adm:ping/1 function.
+#   This script is used for checking that a specified node is running a specific
+#   application.
 #
 #   This script only uses two status codes: OK and CRITICAL. This is due
 #   to the fact that it only checks existence, and does so in a purely
@@ -47,6 +47,7 @@ TMP_NODE="check_node@`hostname`"         # name of temporary node to ping $NODE
 ERL="/usr/bin/erl"                       # full path to erlang executable
 BEAM="/usr/libs/erlang/ebin/check_node/" # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                              # amount of detail to be returned, 0-3
+APPLICAITON="unknown"                    # name of application to check
 
 print_version() {
     echo "$VERSION $AUTHOR"
@@ -57,16 +58,17 @@ print_help() {
     echo ""
     echo "$PROGNAME is a Nagios plugin to check if an Erlang node is pingable from the local host."
     echo ""
-    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie"
+    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie -a my_application"
     echo ""
     echo "Options:"
-    echo "  -e/--erl       : the absolute path to erl binary (/usr/bin/erl)"
-    echo "  -n/--node      : the node to ping against"
-    echo "  -b/--beam      : the absolute path to directory with nagios_erlang.beam"
-    echo "  -c/--cookie    : the cookie used by node (cookie)"
-    echo "  -v/--verbosity : level of detail, 0-3 (0)"
-    echo "  -V/--version   : version of package"
-    echo "  -h/--help      : show this screen"
+    echo "  -a/--application : name of application to check on" 
+    echo "  -e/--erl         : the absolute path to erl binary (/usr/bin/erl)"
+    echo "  -n/--node        : the node to ping against"
+    echo "  -b/--beam        : the absolute path to directory with nagios_erlang.beam"
+    echo "  -c/--cookie      : the cookie used by node (cookie)"
+    echo "  -v/--verbosity   : level of detail, 0-3 (0)"
+    echo "  -V/--version     : version of package"
+    echo "  -h/--help        : show this screen"
 }
 
 while test -n "$1"; do
@@ -104,6 +106,17 @@ while test -n "$1"; do
     shift
 done
 
+if [ $VERBOSITY -ge 3 ]
+ then
+    echo "version: $VERSION"
+    echo "application: $APPLICATION"
+    echo "node: $NODE"
+    echo "cookie: $COOKIE"
+    echo "tmp_node: $TMP_NODE"
+    echo "erl: $ERL"
+    echo "beam: $BEAM"
+    echo "verbosity: $VERBOSITY"
+fi
 
 echo "OK - $NODE pinged successfully."
 exit $ST_OK

@@ -104,6 +104,16 @@ while test -n "$1"; do
     shift
 done
 
+if [ $VERBOSITY -ge 3 ]
+ then
+    echo "version: $VERSION"
+    echo "node: $NODE"
+    echo "cookie: $COOKIE"
+    echo "tmp_node: $TMP_NODE"
+    echo "erl: $ERL"
+    echo "beam: $BEAM"
+    echo "verbosity: $VERBOSITY"
+fi
 
 echo "OK - $NODE pinged successfully."
 exit $ST_OK

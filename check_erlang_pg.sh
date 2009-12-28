@@ -2,14 +2,15 @@
 #
 # ## Overview
 #
-#   This script is used for checking that a specified node can be pinged
-#   using the net_adm:ping/1 function.
+#   This script is used for checking that a specified process group
+#   is populated with a given number of living processes.
+#   (Living is defined as erlang:is_process_alive returns true.)
 #
-#   This script only uses two status codes: OK and CRITICAL. This is due
-#   to the fact that it only checks existence, and does so in a purely
-#   binary fashion.
+#   The script returns OK if more than or equal to --warning processes exist in the process group.
+#   The script returns WARN if less than --warning processes exist.
+#   The script returns CRITICAL if less than or equal to --critical processes exist, or if process group doesn't exist.
 #
-# ## Licence 
+# ## Licence
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -27,9 +28,7 @@
 #
 # ## Acknowledgements
 #
-#   This script owes heavily to the [check_nginx.sh][cnsh] script, upon which the Bash components
-#   are modeled.
-#
+#   This script owes heavily to the [check_nginx.sh][cnsh] script, upon which the Bash components are modeled.
 #   [cnsh]: http://exchange.nagios.org/directory/Plugins/Uncategorized/Software/check_nginx-2Esh/details "check_nginx.sh"
 #
 
@@ -42,11 +41,14 @@ ST_WR=1
 ST_CR=2
 ST_UK=3
 COOKIE="cookie"                          # cookie used by the local node
-NODE="node@localhost"                    # name of node to check
-TMP_NODE="check_node@`hostname`"         # name of temporary node to ping $NODE
+NODE="node@localhost"                    # name of node to inspect process group from
+TMP_NODE="check_node@`hostname`"         # name of temporary node to run code from
 ERL="/usr/bin/erl"                       # full path to erlang executable
 BEAM="/usr/libs/erlang/ebin/check_node/" # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                              # amount of detail to be returned, 0-3
+PROCESS_GROUP="unknown"                  # name of process group to investigate
+WARNING=0                                # minimum number of procs in PG before warning state
+CRITICAL=0                               # minimum number of procs in PG before critical state
 
 print_version() {
     echo "$VERSION $AUTHOR"
@@ -55,14 +57,18 @@ print_version() {
 print_help() {
     print_version $PROGNAME $VERSION
     echo ""
-    echo "$PROGNAME is a Nagios plugin to check if an Erlang node is pingable from the local host."
+    echo "$PROGNAME is a Nagios plugin to check the number of processes in a process group."
     echo ""
     echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie"
+    echo "  -w 5 -C 1 -p my_server_group"
     echo ""
     echo "Options:"
     echo "  -e/--erl       : the absolute path to erl binary (/usr/bin/erl)"
-    echo "  -n/--node      : the node to ping against"
+    echo "  -n/--node      : the node whose process groups will be inspected"
     echo "  -b/--beam      : the absolute path to directory with nagios_erlang.beam"
+    echo "  -w/--warning   : minimum number of nodes before warning issued"
+    echo "  -C/--critical  : minimum number of nodes before critical issued"
+    echo "  -p/--pgroup    : name of process group to inspect"
     echo "  -c/--cookie    : the cookie used by node (cookie)"
     echo "  -v/--verbosity : level of detail, 0-3 (0)"
     echo "  -V/--version   : version of package"
@@ -75,8 +81,20 @@ while test -n "$1"; do
 	    print_help
 	    exit $ST_UK
 	    ;;
-	--verbosity|-v)
+	--verbosity|-v)	    
 	    VERBOSITY=$2
+	    shift
+	    ;;
+	--pgroup|-p)
+	    PROCESS_GROUP=$2
+	    shift
+	    ;;
+	--warning|-w)
+	    WARNING=$2
+	    shift
+	    ;;
+	--critical-C)
+	    CRITICAL=$2
 	    shift
 	    ;;
 	--version|-V)
@@ -103,6 +121,19 @@ while test -n "$1"; do
 	esac
     shift
 done
+
+if [ $VERBOSITY -ge 3 ]
+ then
+    echo "verbosity: $VERBOSITY"
+    echo "warning: $WARNING"
+    echo "critical: $CRITICAL"
+    echo "pgroup: $PROCESS_GROUP"
+    echo "erl: $ERL"
+    echo "cookie: $COOKIE"
+    echo "node: $NODE"
+    echo "tmp_node: $TMP_NODE"
+    echo "beam: $BEAM"
+fi
 
 
 echo "OK - $NODE pinged successfully."
