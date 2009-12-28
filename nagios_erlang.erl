@@ -60,7 +60,7 @@ check_node_inner(Node) ->
 %% @spec check_application_inner(atom(), atom()) -> {status(), string(), list()}.
 %%       status = ok | warning | critical | unknown
 check_application_inner(Node, Application) ->
-    {ok, "Application ~p running at ~p.", [Application Node]}.
+    {ok, "Application ~p running at ~p.", [Application, Node]}.
 
 %% @doc Check status of a remote node's pg2 groups  and return Nagios friendly response.
 %%      If WarnLvl is 0, then no warning messages will be sent.
@@ -81,8 +81,8 @@ check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->
 format_output({Status, Msg, Vals}) ->
     io:format(Msg, Vals),
     case Status of
-	ok -> erlang:halt(OK_CODE);
-	warning -> erlang:halt(WARN_CODE);
-	critical -> erlang:halt(CRIT_CODE);
-	unknown -> erlang:halt(UNKNOWN_CODE)
+	ok -> erlang:halt(?OK_CODE);
+	warning -> erlang:halt(?WARN_CODE);
+	critical -> erlang:halt(?CRIT_CODE);
+	unknown -> erlang:halt(?UNKNOWN_CODE)
     end.
