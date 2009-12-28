@@ -43,9 +43,9 @@ ST_CR=2
 ST_UK=3
 COOKIE="cookie"                          # cookie used by the local node
 NODE="node@localhost"                    # name of node to check
-TMP_NODE="check_node@`hostname`"         # name of temporary node to ping $NODE
+TMP_NODE="nagios_check_app@`hostname`"   # name of temporary node to ping $NODE
 ERL="/usr/bin/erl"                       # full path to erlang executable
-BEAM="/usr/libs/erlang/ebin/check_node/" # full path to directory where nagios_erlang.beam exists
+BEAM="`pwd`/ebin/"                       # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                              # amount of detail to be returned, 0-3
 APPLICAITON="unknown"                    # name of application to check
 

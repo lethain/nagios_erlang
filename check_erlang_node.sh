@@ -43,9 +43,9 @@ ST_CR=2
 ST_UK=3
 COOKIE="cookie"                          # cookie used by the local node
 NODE="node@localhost"                    # name of node to check
-TMP_NODE="check_node@`hostname`"         # name of temporary node to ping $NODE
+TMP_NODE="nagios_check_node@`hostname`"  # name of temporary node to ping $NODE
 ERL="/usr/bin/erl"                       # full path to erlang executable
-BEAM="/usr/libs/erlang/ebin/check_node/" # full path to directory where nagios_erlang.beam exists
+BEAM="`pwd`/ebin/"                       # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                              # amount of detail to be returned, 0-3
 
 print_version() {
@@ -115,11 +115,5 @@ if [ $VERBOSITY -ge 3 ]
     echo "verbosity: $VERBOSITY"
 fi
 
-echo "OK - $NODE pinged successfully."
-exit $ST_OK
-
-echo "WARNING - $NODE could not be pinged."
-exit $ST_WR
-
-echo "CRITICAL - Failed to ping $NODE."
-exit $ST_CR
+CMD="$ERL -pa $BEAM -exec \"nagios_erlang:check_node('$NODE')\" -noshell"
+echo $CMD
