@@ -121,7 +121,7 @@ while test -n "$1"; do
 	esac
     shift
 done
-CMD="$ERL -pa $BEAM -run nagios_erlang check_process_group $NODE $PROCESS_GROUP $WARNING $CRITICAL -noshell"
+CMD="$ERL -pa $BEAM -run nagios_erlang check_process_group $NODE $PROCESS_GROUP $WARNING $CRITICAL -noshell -setcookie $COOKIE -name $TMP_NODE"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "verbosity: $VERBOSITY"

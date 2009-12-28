@@ -56,7 +56,13 @@ check_application([Node, Application]) ->
 check_node_inner(Node) when is_list(Node) ->
     check_node_inner(list_to_atom(Node));
 check_node_inner(Node) ->
-    {ok, "Node ~p running.~n", [Node]}.
+    case net_adm:ping(Node) of
+	pong ->
+	    {ok, "Node ~p running.~n", [Node]};
+	pang ->
+	    {critical, "Node ~p not running.~n", [Node]}
+    end.
+		
 
 %% @doc Check that a remote node is running an application and return Nagios friendly response.
 %% @spec check_application_inner(atom(), atom()) -> {status(), string(), list()}.
@@ -82,9 +88,7 @@ check_process_group_inner(Node, Group, WarnLvl, CritLvl) when is_list(WarnLvl) -
     check_process_group_inner(Node, Group, list_to_integer(WarnLvl), CritLvl);
 check_process_group_inner(Node, Group, WarnLvl, CritLvl) when is_list(CritLvl) ->
     check_process_group_inner(Node, Group, WarnLvl, list_to_integer(CritLvl));
-check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->
-    
-    
+check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->       
     {ok, "Process group ~p populated on Node ~p.~n", [Group, Node]}.
     
 %%%

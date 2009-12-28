@@ -103,7 +103,7 @@ while test -n "$1"; do
 	esac
     shift
 done
-CMD="$ERL -pa $BEAM -run nagios_erlang check_node $NODE -noshell"
+CMD="$ERL -pa $BEAM -setcookie $COOKIE -run nagios_erlang check_node $NODE -noshell -name $TMP_NODE"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "version: $VERSION"

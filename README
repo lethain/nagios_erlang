@@ -43,3 +43,23 @@ to point to the directory where ``nagios_erlang.beam`` can be found.
     OK - Process group my_group populated on Node my_node with 3 processes.
 
 ### Full Example
+
+First, we check that the node doesn't exist before we start it:
+
+    bash-3.2$ ./check_erlang_node.sh -e erl -n my_node@`hostname` -c cookie
+    CRITICAL - Node 'my_node@will-larsons-macbook.local' not running.
+
+Next, actually start the node:
+
+    will-larsons-macbook:~ lethain$ erl -setcookie cookie -name my_node@`hostname`
+    Erlang R13B03 (erts-5.7.4) [source] [smp:2:2] [rq:2] [async-threads:0] [hipe] [kernel-poll:false]
+    Eshell V5.7.4  (abort with ^G)
+    (my_node@will-larsons-macbook.local)1> node().
+    'my_node@will-larsons-macbook.local'
+
+And finally we can verify the script works:
+
+    bash-3.2$ ./check_erlang_node.sh -e erl -n my_node@`hostname` -c cookie
+    OK - Node 'my_node@will-larsons-macbook.local' running.
+
+And that is all there is to it.
