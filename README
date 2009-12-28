@@ -1,0 +1,45 @@
+# README
+
+This repository contains scripts to facilitate monitoring [Erlang][erlang].
+systems using the [Nagios][nagios] monitoring framework.
+
+At this time it supports monitoring nodes, applications and process groups.
+
+[erlang]: http://ftp.sunet.se/pub/lang/erlang/ "Erlang Programming Language"
+[nagios]: http://www.nagios.org/ "Nagios Monitoring Software"
+
+## Files
+
+* README                      - this file
+* Makefile                    - build script
+* check_erlang_application.sh - shell script interface to check erlang apps are running
+* check_erlang_node.sh        - shell script interface to check erlang node is running
+* check_erlang_pg.sh          - shell script interface to check process group is running
+* nagios_erlang.erl           - Erlang implementation of checking apps/nodes/pgs
+* ebin/                       - contains compiled Erlang files
+
+## Command Line Usage Examples
+
+Examples of running the verification scripts directly (not via Nagios).
+These scripts are all being run in a Git checkout of the code, and after
+running ``make`` within that directory.
+
+To run in other directorys, the ``--beam`` parameter will need to be updated
+to point to the directory where ``nagios_erlang.beam`` can be found.
+
+### Checking Nodes
+
+    bash-3.2$ ./check_erlang_node.sh -e /usr/bin/erl -n my_node
+    OK - Node my_node running.
+
+### Checking Applications
+
+    bash-3.2$ ./check_erlang_application.sh -e /usr/bin/erl -n my_node -a application
+    OK - Application application running at my_node.
+
+### Checking Process Groups
+
+    ./check_erlang_pg.sh -e /usr/bin/erl -n my_node -p my_group -w 1
+    OK - Process group my_group populated on Node my_node with 3 processes.
+
+### Full Example
