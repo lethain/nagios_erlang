@@ -93,7 +93,7 @@ while test -n "$1"; do
 	    WARNING=$2
 	    shift
 	    ;;
-	--critical-C)
+	--critical|-C)
 	    CRITICAL=$2
 	    shift
 	    ;;

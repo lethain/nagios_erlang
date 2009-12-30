@@ -74,12 +74,13 @@ check_application_inner(Node, Application) when is_list(Application) ->
     check_application_inner(Node, list_to_atom(Application));
 check_application_inner(Node, Application) ->
     case rpc:call(Node, application, start, [Application], ?RPC_TIMEOUT) of
-	{badrpc,timeout} ->
+	{badrpc, timeout} ->
 	    {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
-	{badrpc,nodedown} ->
-	    {critical, "Node ~p not running.~n", [Node]};
+	{badrpc, _} ->
+	    {critical, "Couldn't contact Node ~p.~n", [Node]};
 	{error, {already_started, Application}} ->
 	    {ok, "Application ~p running on Node ~p.~n", [Application, Node]};
+	%% @todo move the {application_started ???} -> critical, _Other -> unknown
 	_Other ->
 	    {critical, "Application ~p not running on Node ~p.~n", [Application, Node]}
     end.
@@ -98,8 +99,24 @@ check_process_group_inner(Node, Group, WarnLvl, CritLvl) when is_list(WarnLvl) -
     check_process_group_inner(Node, Group, list_to_integer(WarnLvl), CritLvl);
 check_process_group_inner(Node, Group, WarnLvl, CritLvl) when is_list(CritLvl) ->
     check_process_group_inner(Node, Group, WarnLvl, list_to_integer(CritLvl));
-check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->       
-    {ok, "Process group ~p populated on Node ~p.~n", [Group, Node]}.
+check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->
+    case rpc:call(Node, pg2, get_members, [Group], ?RPC_TIMEOUT) of
+	{badrpc, timeout} ->
+	    {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
+	{badrpc, _} ->
+	    {critical, "Couldn't contact Node ~p.~n", [Node]};
+	{error,{no_such_group,Group}} ->
+	    {critical, "Process Group ~p doesn't exist on Node ~p.~n", [Group, Node]};
+	Pids when is_list(Pids) ->
+	    Length = length(Pids),
+	    if Length < CritLvl -> {critical, "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.", [Length, Group, Node, CritLvl]};
+	       Length < WarnLvl -> {warning, "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.", [Length, Group, Node, WarnLvl]};
+	       true -> {ok, "~p processes in Process Group ~p on Node ~p, meets expectation of ~p processes.", [Length, Group, Node, WarnLvl]}
+	    end;
+	_Other ->
+	    {unknown, "Couldn't check Process Group ~p on Node ~p.~n", [Group, Node]}
+    end.
+
     
 %%%
 %%% Utilities
