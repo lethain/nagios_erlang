@@ -10,13 +10,13 @@ At this time it supports monitoring nodes, applications and process groups.
 
 ## Files
 
-* README                      - this file
-* Makefile                    - build script
-* check_erlang_application.sh - shell script interface to check erlang apps are running
-* check_erlang_node.sh        - shell script interface to check erlang node is running
-* check_erlang_pg.sh          - shell script interface to check process group is running
-* nagios_erlang.erl           - Erlang implementation of checking apps/nodes/pgs
-* ebin/                       - contains compiled Erlang files
+* README                          - this file
+* Makefile                        - build script
+* bin/check_erlang_application.sh - shell script interface to check erlang apps are running
+* bin/check_erlang_node.sh        - shell script interface to check erlang node is running
+* bin/check_erlang_pg.sh          - shell script interface to check process group is running
+* src/nagios_erlang.erl           - Erlang implementation of checking apps/nodes/pgs
+* ebin/                           - contains compiled Erlang files
 
 ## Command Line Usage Examples
 

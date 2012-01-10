@@ -1,9 +1,8 @@
 ERL=erl
 EBIN=ebin
 
-build:  clean
-	erlc *.erl
-	mv *.beam $(EBIN)
+build:
+	@$(ERL) -make
 
 clean:
 	rm -rf $(EBIN)/*.beam
