@@ -87,6 +87,10 @@ while test -n "$1"; do
 	    ERL=$2
 	    shift
 	    ;;
+	--beam|-b)
+	    BEAM=$2
+	    shift
+	    ;;
 	--cookie|-c)
 	    COOKIE=$2
 	    shift
