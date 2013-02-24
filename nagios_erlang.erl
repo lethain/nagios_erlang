@@ -36,7 +36,7 @@ check_process_group([Node, Group, WarnLvl, CritLvl]) ->
 %%
 %%      Has no return value due to calling erlang:halt/1.
 %% @term check_node(atom()).
-check_node([Node]) ->	    
+check_node([Node]) ->
     format_output(check_node_inner(Node)).
 
 %% @doc Check if the specified application is currently running on the specified node,
@@ -44,8 +44,9 @@ check_node([Node]) ->
 %%
 %%      Has no return value due to calling erlang:halt/1.
 %% @spec check_application(atom(), atom().
-check_application([Node, Application]) ->
-    format_output(check_application_inner(Node, Application)).
+check_application([Node, Applications]) ->
+    AppList = string:tokens(Applications, ","),
+    format_output(check_application_inner(Node, AppList)).
 
 %%%
 %%% Internal Implementations
@@ -58,31 +59,36 @@ check_node_inner(Node) when is_list(Node) ->
     check_node_inner(list_to_atom(Node));
 check_node_inner(Node) ->
     case net_adm:ping(Node) of
-	pong ->
-	    {ok, "Node ~p running.~n", [Node]};
-	pang ->
-	    {critical, "Node ~p not running.~n", [Node]}
+    pong ->
+        {ok, "Node ~p running.~n", [Node]};
+    pang ->
+        {critical, "Node ~p not running.~n", [Node]}
     end.
-		
 
 %% @doc Check that a remote node is running an application and return Nagios friendly response.
 %% @spec check_application_inner(atom(), atom()) -> {status(), string(), list()}.
 %%       status = ok | warning | critical | unknown
-check_application_inner(Node, Application) when is_list(Node) ->
-    check_application_inner(list_to_atom(Node), Application);
-check_application_inner(Node, Application) when is_list(Application) ->    
-    check_application_inner(Node, list_to_atom(Application));
-check_application_inner(Node, Application) ->
-    case rpc:call(Node, application, start, [Application], ?RPC_TIMEOUT) of
-	{badrpc, timeout} ->
-	    {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
-	{badrpc, _} ->
-	    {critical, "Couldn't contact Node ~p.~n", [Node]};
-	{error, {already_started, Application}} ->
-	    {ok, "Application ~p running on Node ~p.~n", [Application, Node]};
-	%% @todo move the {application_started ???} -> critical, _Other -> unknown
-	_Other ->
-	    {critical, "Application ~p not running on Node ~p.~n", [Application, Node]}
+check_application_inner(Node, CheckedApps) when is_list(Node) ->
+    check_application_inner(list_to_atom(Node), CheckedApps);
+check_application_inner(Node, CheckedApps) ->
+    case rpc:call(Node, application, which_applications, [], ?RPC_TIMEOUT) of
+    {badrpc, timeout} ->
+        {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
+    {badrpc, _} ->
+        {critical, "Couldn't contact Node ~p.~n", [Node]};
+    ExistApps ->
+        ExistNames = [atom_to_list(N) || {N, _, _} <- ExistApps],
+        BrokenApps = lists:filter(fun(A) ->
+                          not lists:member(A, ExistNames)
+                      end, CheckedApps),
+        case BrokenApps of
+        [] ->
+            {ok, "Applications ~p running on Node ~p.~n",
+             [CheckedApps, Node]};
+        _ ->
+            {critical, "Applications ~p not running on Node ~p.~n",
+             [BrokenApps, Node]}
+        end
     end.
 
 %% @doc Check status of a remote node's pg2 groups  and return Nagios friendly response.
@@ -101,22 +107,27 @@ check_process_group_inner(Node, Group, WarnLvl, CritLvl) when is_list(CritLvl) -
     check_process_group_inner(Node, Group, WarnLvl, list_to_integer(CritLvl));
 check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->
     case rpc:call(Node, pg2, get_members, [Group], ?RPC_TIMEOUT) of
-	{badrpc, timeout} ->
-	    {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
-	{badrpc, _} ->
-	    {critical, "Couldn't contact Node ~p.~n", [Node]};
-	{error,{no_such_group,Group}} ->
-	    {critical, "Process Group ~p doesn't exist on Node ~p.~n", [Group, Node]};
-	Pids when is_list(Pids) ->
-	    Length = length(Pids),
-	    if Length < CritLvl -> {critical, "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.", [Length, Group, Node, CritLvl]};
-	       Length < WarnLvl -> {warning, "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.", [Length, Group, Node, WarnLvl]};
-	       true -> {ok, "~p processes in Process Group ~p on Node ~p, meets expectation of ~p processes.", [Length, Group, Node, WarnLvl]}
-	    end;
-	_Other ->
-	    {unknown, "Couldn't check Process Group ~p on Node ~p.~n", [Group, Node]}
+    {badrpc, timeout} ->
+        {warning, "Node ~p did not respond within ~p milliseconds.~n", [Node, ?RPC_TIMEOUT]};
+    {badrpc, _} ->
+        {critical, "Couldn't contact Node ~p.~n", [Node]};
+    {error,{no_such_group,Group}} ->
+        {critical, "Process Group ~p doesn't exist on Node ~p.~n", [Group, Node]};
+    Pids when is_list(Pids) ->
+        Length = length(Pids),
+        if Length < CritLvl -> {critical,
+                                "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.",
+                                [Length, Group, Node, CritLvl]};
+           Length < WarnLvl -> {warning,
+                                "Only ~p processes in Process Group ~p on Node ~p, expected ~p processes.",
+                                [Length, Group, Node, WarnLvl]};
+           true -> {ok,
+                    "~p processes in Process Group ~p on Node ~p, meets expectation of ~p processes.",
+                    [Length, Group, Node, WarnLvl]}
+        end;
+    _Other ->
+        {unknown, "Couldn't check Process Group ~p on Node ~p.~n", [Group, Node]}
     end.
-
     
 %%%
 %%% Utilities
@@ -127,16 +138,16 @@ check_process_group_inner(Node, Group, WarnLvl, CritLvl) ->
 %%      combination of Msg & Vals is sent to stdout.
 format_output({Status, Msg, Vals}) ->
     case Status of
-	ok -> 
-	    io:format(lists:concat(["OK - ",Msg]), Vals),
-	    erlang:halt(?OK_CODE);
-	warning -> 
-	    io:format(lists:concat(["WARNING - ",Msg]), Vals),
-	    erlang:halt(?WARN_CODE);
-	critical -> 
-	    io:format(lists:concat(["CRITICAL - ",Msg]), Vals),
-	    erlang:halt(?CRIT_CODE);
-	unknown -> 
-	    io:format(lists:concat(["UNKNOWN - ",Msg]), Vals),
-	    erlang:halt(?UNKNOWN_CODE)
+    ok ->
+        io:format(lists:concat(["OK - ",Msg]), Vals),
+        erlang:halt(?OK_CODE);
+    warning ->
+        io:format(lists:concat(["WARNING - ",Msg]), Vals),
+        erlang:halt(?WARN_CODE);
+    critical ->
+        io:format(lists:concat(["CRITICAL - ",Msg]), Vals),
+        erlang:halt(?CRIT_CODE);
+    unknown ->
+        io:format(lists:concat(["UNKNOWN - ",Msg]), Vals),
+        erlang:halt(?UNKNOWN_CODE)
     end.

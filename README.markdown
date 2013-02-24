@@ -29,13 +29,13 @@ to point to the directory where ``nagios_erlang.beam`` can be found.
 
 ### Checking Nodes
 
-    bash-3.2$ ./check_erlang_node.sh -e /usr/bin/erl -n my_node
+    bash-3.2$ ./check_erlang_node.sh -e `which erl` -n my_node -c `cat /path/to/.erlang.cookie`
     OK - Node my_node running.
 
 ### Checking Applications
 
-    bash-3.2$ ./check_erlang_application.sh -e /usr/bin/erl -n my_node -a application
-    OK - Application application running at my_node.
+    bash-3.2$ ./check_erlang_application.sh -e `which erl` -n my_node -c `cat /path/to/.erlang.cookie` -a application1,application2
+    OK - Applications ["application1","application2"] running on Node my_node.
 
 ### Checking Process Groups
 
@@ -67,11 +67,8 @@ application which doesn't exist, while kernel is a real application which
 is indeed running):
 
     bash-3.2$ ./check_erlang_application.sh -e erl -c cookie -n my_node@`hostname` -a kernel2
-    CRITICAL - Application kernel2 not running on Node 'my_node@will-larsons-macbook.local'.
+    CRITICAL - Applications ["kernel2"] not running on Node 'my_node@will-larsons-macbook.local'.
     bash-3.2$ ./check_erlang_application.sh -e erl -c cookie -n my_node@`hostname` -a kernel
-    OK - Application kernel running on Node 'my_node@will-larsons-macbook.local'.
-
-Last, we can check on the process groups:
-
+    OK - Applications ["kernel"] running on Node 'my_node@will-larsons-macbook.local'.
 
 And that is all there is to it.
