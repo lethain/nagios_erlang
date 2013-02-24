@@ -37,16 +37,19 @@ PROGNAME=`basename $0`
 VERSION="Version 0.1,"
 AUTHOR="2009, Will Larson [http://lethain.com]"
 
+RANDOM=`echo | awk '{srand(); print rand()}' | awk '{sub(/\./, ""); print}'` # $RANDOM for sh
+
 ST_OK=0
 ST_WR=1
 ST_CR=2
 ST_UK=3
-COOKIE="cookie"                          # cookie used by the local node
-NODE="node@localhost"                    # name of node to check
-TMP_NODE="nagios_check_node@`hostname`"  # name of temporary node to ping $NODE
-ERL="/usr/bin/erl"                       # full path to erlang executable
-BEAM="`pwd`/ebin/"                       # full path to directory where nagios_erlang.beam exists
-VERBOSITY=0                              # amount of detail to be returned, 0-3
+COOKIE="cookie"                                  # cookie used by the local node
+NODE="node@localhost"                            # name of node to check
+TMP_NODE="nagios_check_node_$RANDOM"              # name of temporary node to ping $NODE
+TMP_HOST="`hostname`"
+ERL="/usr/bin/erl"                               # full path to erlang executable
+BEAM="`pwd`/ebin/"                               # full path to directory where nagios_erlang.beam exists
+VERBOSITY=0                                      # amount of detail to be returned, 0-3
 
 print_version() {
     echo "$VERSION $AUTHOR"
@@ -71,42 +74,47 @@ print_help() {
 
 while test -n "$1"; do
     case "$1" in
-	--help|-h)
-	    print_help
-	    exit $ST_UK
-	    ;;
-	--verbosity|-v)
-	    VERBOSITY=$2
-	    shift
-	    ;;
-	--version|-V)
-	    print_version $PROGNAME $VERSION
-	    exit $ST_UK
-	    ;;
-	--erl|-e)
-	    ERL=$2
-	    shift
-	    ;;
-	--beam|-b)
-	    BEAM=$2
-	    shift
-	    ;;
-	--cookie|-c)
-	    COOKIE=$2
-	    shift
-	    ;;
-	--node|-n)
-	    NODE=$2
-	    shift
-	    ;;
-	*)
-	    echo "Uknown argument: $1"
-	    print_help
-	    exit $ST_UK
-	    ;;
-	esac
+    --help|-h)
+        print_help
+        exit $ST_UK
+        ;;
+    --verbosity|-v)
+        VERBOSITY=$2
+        shift
+        ;;
+    --version|-V)
+        print_version $PROGNAME $VERSION
+        exit $ST_UK
+        ;;
+    --erl|-e)
+        ERL=$2
+        shift
+        ;;
+    --beam|-b)
+        BEAM=$2
+        shift
+        ;;
+    --cookie|-c)
+        COOKIE=$2
+        shift
+        ;;
+    --node|-n)
+        NODE=$2
+        shift
+        ;;
+    --host|-H)
+        TMP_HOST=$2
+        shift
+        ;;
+    *)
+        echo "Uknown argument: $1"
+        print_help
+        exit $ST_UK
+        ;;
+    esac
     shift
 done
+TMP_NODE="$TMP_NODE@$TMP_HOST"
 CMD="$ERL -pa $BEAM -setcookie $COOKIE -run nagios_erlang check_node $NODE -noshell -name $TMP_NODE"
 if [ $VERBOSITY -ge 3 ]
  then
