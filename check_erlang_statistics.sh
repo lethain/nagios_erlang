@@ -2,12 +2,7 @@
 #
 # ## Overview
 #
-#   This script is used for checking that a specified node is running a specific
-#   application.
 #
-#   This script only uses two status codes: OK and CRITICAL. This is due
-#   to the fact that it only checks existence, and does so in a purely
-#   binary fashion.
 #
 # ## Licence 
 #
@@ -51,6 +46,7 @@ ERL="/usr/bin/erl"                               # full path to erlang executabl
 BEAM="`pwd`/ebin/"                               # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                                      # amount of detail to be returned, 0-3
 APPLICAITON="unknown"                            # name of application to check
+ALIASES="undefined"
 
 print_version() {
     echo "$VERSION $AUTHOR"
@@ -61,16 +57,15 @@ print_help() {
     echo ""
     echo "$PROGNAME is a Nagios plugin to check if an Erlang node is pingable from the local host."
     echo ""
-    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie -a my_application"
+    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie -p my_param1:100-200;myparam2:300-500 -a /path/to/add/stat/aliases"
     echo ""
     echo "Options:"
-    echo "  -a/--application : name of application to check on" 
+    echo "  -p/--parameters  : parameters example 'sys_mem:50-100;total_process:300-500'" 
+    echo "  -a/--aliases     : file with aliases in format {tag, Verbose, M,F,A}}"
     echo "  -e/--erl         : the absolute path to erl binary (/usr/bin/erl)"
     echo "  -n/--node        : the node to ping against"
     echo "  -b/--beam        : the absolute path to directory with nagios_erlang.beam"
     echo "  -c/--cookie      : the cookie used by node (cookie)"
-    echo "  -h/--help        : show this screen"
-    echo "  -H/--host        : host of erlang node"
     echo "  -v/--verbosity   : level of detail, 0-3 (0)"
     echo "  -V/--version     : version of package"
     echo "  -h/--help        : show this screen"
@@ -78,8 +73,12 @@ print_help() {
 
 while test -n "$1"; do
     case "$1" in
-    --application|-a)
-        APPLICATION=$2
+    --aliases|-a)
+        ALIASES=$2
+        shift
+        ;;
+    --parameters|-p)
+        PARAMETERS=$2
         shift
         ;;
     --help|-h)
@@ -123,11 +122,12 @@ while test -n "$1"; do
     shift
 done
 TMP_NODE="$TMP_NODE@$TMP_HOST"
-CMD="$ERL -pa $BEAM -run nagios_erlang check_application $NODE $APPLICATION -noshell -name $TMP_NODE -setcookie $COOKIE"
+CMD="$ERL -pa $BEAM -run nagios_erlang check_statistics $NODE $PARAMETERS $ALIASES -noshell -name $TMP_NODE -setcookie $COOKIE"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "version: $VERSION"
-    echo "application: $APPLICATION"
+    echo "aliases: $ALIASES"
+    echo "parameters: $PARAMETERS"
     echo "node: $NODE"
     echo "cookie: $COOKIE"
     echo "tmp_node: $TMP_NODE"
