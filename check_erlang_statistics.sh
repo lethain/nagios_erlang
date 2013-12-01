@@ -2,12 +2,7 @@
 #
 # ## Overview
 #
-#   This script is used for checking that a specified node can be pinged
-#   using the net_adm:ping/1 function.
 #
-#   This script only uses two status codes: OK and CRITICAL. This is due
-#   to the fact that it only checks existence, and does so in a purely
-#   binary fashion.
 #
 # ## Licence 
 #
@@ -45,11 +40,13 @@ ST_CR=2
 ST_UK=3
 COOKIE="cookie"                                  # cookie used by the local node
 NODE="node@localhost"                            # name of node to check
-TMP_NODE="nagios_check_node_$RANDOM"              # name of temporary node to ping $NODE
+TMP_NODE="nagios_check_app_$RANDOM"              # name of temporary node to ping $NODE
 TMP_HOST="`hostname`"
 ERL="/usr/bin/erl"                               # full path to erlang executable
 BEAM="`pwd`/ebin/"                               # full path to directory where nagios_erlang.beam exists
 VERBOSITY=0                                      # amount of detail to be returned, 0-3
+APPLICAITON="unknown"                            # name of application to check
+ALIASES="undefined"
 
 print_version() {
     echo "$VERSION $AUTHOR"
@@ -60,20 +57,30 @@ print_help() {
     echo ""
     echo "$PROGNAME is a Nagios plugin to check if an Erlang node is pingable from the local host."
     echo ""
-    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie"
+    echo "$PROGNAME -e /usr/bin/erl -b /home/wl/nagios_erlang/ebin/ -n my_server -c my_cookie -p my_param1:100-200;myparam2:300-500 -a /path/to/add/stat/aliases"
     echo ""
     echo "Options:"
-    echo "  -e/--erl       : the absolute path to erl binary (/usr/bin/erl)"
-    echo "  -n/--node      : the node to ping against"
-    echo "  -b/--beam      : the absolute path to directory with nagios_erlang.beam"
-    echo "  -c/--cookie    : the cookie used by node (cookie)"
-    echo "  -v/--verbosity : level of detail, 0-3 (0)"
-    echo "  -V/--version   : version of package"
-    echo "  -h/--help      : show this screen"
+    echo "  -p/--parameters  : parameters example 'sys_mem:50-100;total_process:300-500'" 
+    echo "  -a/--aliases     : file with aliases in format {tag, Verbose, M,F,A}}"
+    echo "  -e/--erl         : the absolute path to erl binary (/usr/bin/erl)"
+    echo "  -n/--node        : the node to ping against"
+    echo "  -b/--beam        : the absolute path to directory with nagios_erlang.beam"
+    echo "  -c/--cookie      : the cookie used by node (cookie)"
+    echo "  -v/--verbosity   : level of detail, 0-3 (0)"
+    echo "  -V/--version     : version of package"
+    echo "  -h/--help        : show this screen"
 }
 
 while test -n "$1"; do
     case "$1" in
+    --aliases|-a)
+        ALIASES=$2
+        shift
+        ;;
+    --parameters|-p)
+        PARAMETERS=$2
+        shift
+        ;;
     --help|-h)
         print_help
         exit $ST_UK
@@ -115,10 +122,12 @@ while test -n "$1"; do
     shift
 done
 TMP_NODE="$TMP_NODE@$TMP_HOST"
-CMD="$ERL -pa $BEAM -setcookie $COOKIE -run nagios_erlang check_node $NODE -noshell -name $TMP_NODE"
+CMD="$ERL -pa $BEAM -run nagios_erlang check_statistics $NODE $PARAMETERS $ALIASES -noshell -name $TMP_NODE -setcookie $COOKIE"
 if [ $VERBOSITY -ge 3 ]
  then
     echo "version: $VERSION"
+    echo "aliases: $ALIASES"
+    echo "parameters: $PARAMETERS"
     echo "node: $NODE"
     echo "cookie: $COOKIE"
     echo "tmp_node: $TMP_NODE"
@@ -128,3 +137,4 @@ if [ $VERBOSITY -ge 3 ]
     echo "full command: $CMD"
 fi
 $CMD
+
