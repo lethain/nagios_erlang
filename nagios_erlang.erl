@@ -249,9 +249,9 @@ check_one_param(_Node, Key, _Warn, _Err, State)->
     {{critical, "Parameter " ++ Key ++ "Not found", []}, State}.
 
 check_val(Val, _Warn, Err, Pref) when Val > Err ->
-    {critical, Pref ++ ": ~p > ~p", [Val, Err]};
+    {critical, Pref ++ "=~p", [Val]};
 check_val(Val, Warn, _Err, Pref) when Val > Warn ->
-    {warning, Pref ++ ": ~p > ~p", [Val, Warn]};
+    {warning, Pref ++ "=~p", [Val]};
 check_val(Val, _Warn, _Err, Pref) ->
     {ok, Pref ++ "=~p", [Val]}.
     
