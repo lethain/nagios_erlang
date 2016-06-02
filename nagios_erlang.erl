@@ -251,8 +251,8 @@ check_val(Val, _Warn, Err, Pref) when Val > Err ->
     {critical, Pref ++ ": ~p > ~p", [Val, Err]};
 check_val(Val, Warn, _Err, Pref) when Val > Warn ->
     {warning, Pref ++ ": ~p > ~p", [Val, Warn]};
-check_val(_Val, _Warn, _Err, Pref) ->
-    {ok, Pref, []}.
+check_val(Val, _Warn, _Err, Pref) ->
+    {ok, Pref ++ ": ~p", [Val]}.
     
 %%%
 %%% Utilities
