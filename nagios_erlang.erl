@@ -269,12 +269,12 @@ format_output({Status, Msg, Vals}) ->
         io:format(Msg, Vals),
         erlang:halt(?OK_CODE);
     warning ->
-        io:format(lists:concat(["WARNING - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?WARN_CODE);
     critical ->
-        io:format(lists:concat(["CRITICAL - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?CRIT_CODE);
     unknown ->
-        io:format(lists:concat(["UNKNOWN - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?UNKNOWN_CODE)
     end.
