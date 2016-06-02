@@ -73,8 +73,8 @@ is indeed running):
 
 Check statistics (memory, processes, ports):
 
-    bash-3.2$ ./check_erlang_statistics.sh -e `which erl` -n ejabberd@fr-hq-xmpp-01.corp.withings.com -c `cat /var/lib/ejabberd/.erlang.cookie` -p sys_mem:300-500
-    bash-3.2$ ./check_erlang_statistics.sh -e `which erl` -n ejabberd@fr-hq-xmpp-01.corp.withings.com -c `cat /var/lib/ejabberd/.erlang.cookie` -p processes:300-500
-    bash-3.2$ ./check_erlang_statistics.sh -e `which erl` -n ejabberd@fr-hq-xmpp-01.corp.withings.com -c `cat /var/lib/ejabberd/.erlang.cookie` -p ports:300-500
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p sys_mem:300-500
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p processes:300-500
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p ports:300-500
 
 And that is all there is to it.
