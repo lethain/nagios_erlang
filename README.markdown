@@ -71,4 +71,10 @@ is indeed running):
     bash-3.2$ ./check_erlang_application.sh -e erl -c cookie -n my_node@`hostname` -a kernel
     OK - Applications ["kernel"] running on Node 'my_node@will-larsons-macbook.local'.
 
+Check statistics (memory, processes, ports):
+
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p sys_mem:300-500
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p processes:300-500
+    bash-3.2$ ./check_erlang_statistics.sh -e erl -n my_node@will-larsons-macbook.local -c cookie -p ports:300-500
+
 And that is all there is to it.

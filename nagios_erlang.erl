@@ -176,8 +176,9 @@ check_statistics_inner(Node, Params, AliasFile) ->
 
 collect_messages(Messages) ->
     lists:foldl(
-      fun({M, D}, {FM, FD}) ->
-	      {M ++"; " ++ FM, D ++ FD}
+      fun({M, D}, {_, FD}) ->
+	      {M, D ++ FD}
+	      %%{M ++", " ++ FM, D ++ FD}
       end, {"", []}, Messages).
 
 collect_state(#stat_state{critical=Mess}) when Mess =/= [] ->
@@ -225,13 +226,13 @@ check_one_param(Node, "proc_mem", Warn, Err, State) ->
 check_one_param(Node, "processes", Warn, Err, State) ->
     with_rpc(Node, erlang, system_info, [process_count], 
 	    fun(Val) ->
-		    {check_val(Val, Warn, Err, "Processes"), State}
+		    {check_val(Val, Warn, Err, "processes"), State}
 	    end
 	    );
 check_one_param(Node, "ports", Warn, Err, State) ->
     with_rpc(Node, erlang, ports, [], 
 	    fun(Val) ->
-		    {check_val(length(Val), Warn, Err, "Ports"), State}
+		    {check_val(length(Val), Warn, Err, "ports"), State}
 	    end
 	    );
 check_one_param(Node, Key, Warn, Err, #stat_state{aliases=Aliases}=State) when Aliases =/= undefined->
@@ -248,11 +249,11 @@ check_one_param(_Node, Key, _Warn, _Err, State)->
     {{critical, "Parameter " ++ Key ++ "Not found", []}, State}.
 
 check_val(Val, _Warn, Err, Pref) when Val > Err ->
-    {critical, Pref ++ ": ~p > ~p", [Val, Err]};
+    {critical, Pref ++ "=~p", [Val]};
 check_val(Val, Warn, _Err, Pref) when Val > Warn ->
-    {warning, Pref ++ ": ~p > ~p", [Val, Warn]};
-check_val(_Val, _Warn, _Err, Pref) ->
-    {ok, Pref, []}.
+    {warning, Pref ++ "=~p", [Val]};
+check_val(Val, _Warn, _Err, Pref) ->
+    {ok, Pref ++ "=~p", [Val]}.
     
 %%%
 %%% Utilities
@@ -265,15 +266,15 @@ check_val(_Val, _Warn, _Err, Pref) ->
 format_output({Status, Msg, Vals}) ->
     case Status of
     ok ->
-        io:format(lists:concat(["OK - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?OK_CODE);
     warning ->
-        io:format(lists:concat(["WARNING - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?WARN_CODE);
     critical ->
-        io:format(lists:concat(["CRITICAL - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?CRIT_CODE);
     unknown ->
-        io:format(lists:concat(["UNKNOWN - ",Msg]), Vals),
+        io:format(Msg, Vals),
         erlang:halt(?UNKNOWN_CODE)
     end.
